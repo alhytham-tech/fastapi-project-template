@@ -32,6 +32,10 @@ class RoleUpdate(BaseModel):
     permissions: Optional[List[str]]
 
 
+class RemoveRolePermission(BaseModel):
+    permissions: List[str]
+
+
 class RoleSchema(BaseUACSchemaMixin):
     permissions: List[PermissionSchema]
     
