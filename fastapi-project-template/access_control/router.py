@@ -51,3 +51,30 @@ def permission_detail(perm_name: str, dba: Session = Depends(deps.get_db)):
         )
     else:
         return permission
+
+
+@perms_router.put('/{perm_name}', response_model=schemas.PermissionSchema)
+def update_permission(
+    perm_name: str,
+    perm_data: schemas.PermissionUpdate,
+    dba: Session = Depends(deps.get_db)
+):
+    try:
+        permission = cruds.get_perm_by_name(name=perm_name, db=dba)
+    except NoResultFound:
+        raise HTTPException(
+            status_code=404,
+            detail='Permission not found'
+        )
+    else:
+        perm_update_dict = perm_data.dict(exclude_unset=True)
+        if len(perm_update_dict) < 1:
+            raise HTTPException(
+                status_code=400,
+                detail='Invalid request'
+            )
+        for key, value in perm_update_dict.items():
+            setattr(permission, key, value)
+        dba.commit()
+        dba.refresh(permission)
+        return permission
