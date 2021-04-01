@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -31,3 +32,8 @@ def create_permission(
         )
     else:
         return permission
+
+
+@perms_router.get('', response_model=List[schemas.PermissionSchema])
+def list_permissions(dba: Session = Depends(deps.get_db)):
+    return dba.query(models.Permission).all()
