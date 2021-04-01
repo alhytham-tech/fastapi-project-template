@@ -164,3 +164,16 @@ def update_role(
     return role
 
 
+@roles_router.delete('/{role_name}')
+def delete_role(role_name: str, dba: Session = Depends(deps.get_db)):
+    role = cruds.get_role_by_name(db=dba, name=role_name)
+    if not role:
+        raise HTTPException(
+            status_code=404,
+            detail='Role not found'
+        )
+    dba.query(models.Role). \
+        filter(models.Role.name == role_name). \
+        delete()
+    dba.commit()
+    return {'detail': 'Role deleted successfully.'}
