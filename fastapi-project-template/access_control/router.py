@@ -119,3 +119,8 @@ def create_role(
         )
     else:
         return role
+
+
+@roles_router.get('', response_model=List[schemas.RoleSchema])
+def list_roles(dba: Session = Depends(deps.get_db)):
+    return dba.query(models.Role).all()
