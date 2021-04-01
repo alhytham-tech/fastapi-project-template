@@ -26,3 +26,9 @@ def create_role(db: Session, role_data: schemas.RoleCreate):
     db.commit()
     db.refresh(role)
     return role
+
+
+def get_role_by_name(db: Session, name: str):
+    return db.query(models.Role). \
+        filter(models.Role.name == name). \
+        one()
