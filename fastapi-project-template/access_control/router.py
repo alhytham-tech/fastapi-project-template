@@ -135,3 +135,36 @@ def role_detail(role_name: str, dba: Session = Depends(deps.get_db)):
     return role
 
 
+@roles_router.put(
+    '/{role_name}',
+    response_model=schemas.RoleSchema
+)
+def update_role(
+    role_name: str,
+    role_data: schemas.RoleUpdate,
+    dba: Session = Depends(deps.get_db)
+):
+    role = cruds.get_role_by_name(name=role_name, db=dba)
+    if not role:
+        raise HTTPException(
+            status_code=404,
+            detail='Role not found'
+        )
+    role_dict = role_data.dict(exclude_unset=True)
+    try:
+        perms = role_dict.pop('permissions')
+    except KeyError:
+        pass
+    else:
+        for perm_name in perms:
+            perm = cruds.get_perm_by_name(name=perm_name, db=dba)
+            if perm:
+                role.permissions.append(perm)
+
+    for key, value in role_dict.items():
+        setattr(role, key, value)
+    dba.commit()
+    dba.refresh(role)
+    return role
+
+
