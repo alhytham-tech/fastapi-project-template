@@ -124,3 +124,16 @@ def create_role(
 @roles_router.get('', response_model=List[schemas.RoleSchema])
 def list_roles(dba: Session = Depends(deps.get_db)):
     return dba.query(models.Role).all()
+
+
+@roles_router.get('/{role_name}',response_model=schemas.RoleSchema)
+def role_detail(role_name: str, dba: Session = Depends(deps.get_db)):
+    try:
+        role = cruds.get_role_by_name(name=role_name, db=dba)
+    except NoResultFound:
+        raise HTTPException(
+            status_code=404,
+            detail='Role not found'
+        )
+    else:
+        return role
