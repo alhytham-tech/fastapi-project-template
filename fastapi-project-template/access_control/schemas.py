@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel
 
 from mixins.schemas import BaseUACSchemaMixin
@@ -16,6 +16,28 @@ class PermissionUpdate(BaseModel):
 
 
 class PermissionSchema(BaseUACSchemaMixin):
+    
+    class Config:
+        orm_mode = True
+
+
+class RoleCreate(BaseModel):
+    name: str
+    description: Optional[str]
+
+
+class RoleUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    permissions: Optional[List[str]]
+
+
+class RemoveRolePermission(BaseModel):
+    permissions: List[str]
+
+
+class RoleSchema(BaseUACSchemaMixin):
+    permissions: List[PermissionSchema]
     
     class Config:
         orm_mode = True

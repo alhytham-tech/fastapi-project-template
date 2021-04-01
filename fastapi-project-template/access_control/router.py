@@ -13,8 +13,13 @@ perms_router = APIRouter(
     prefix='/permissions',
     tags=['Permissions']
 )
+roles_router = APIRouter(
+    prefix='/roles',
+    tags=['Roles']
+)
 
 
+# Permissions
 @perms_router.post('',
     status_code=201,
     response_model=schemas.PermissionSchema
@@ -27,8 +32,8 @@ def create_permission(
         permission = cruds.create_permission(db=dba, perm_data=perm_data)
     except IntegrityError as e:
         raise HTTPException(
-            status_code=400,
-            detail='This permission name is already in use'
+            status_code=403,
+            detail='Duplicate permission not allowed'
         )
     else:
         return permission
@@ -41,15 +46,13 @@ def list_permissions(dba: Session = Depends(deps.get_db)):
 
 @perms_router.get('/{perm_name}',response_model=schemas.PermissionSchema)
 def permission_detail(perm_name: str, dba: Session = Depends(deps.get_db)):
-    try:
-        permission = cruds.get_perm_by_name(name=perm_name, db=dba)
-    except NoResultFound:
+    permission = cruds.get_perm_by_name(name=perm_name, db=dba)
+    if not permission:
         raise HTTPException(
             status_code=404,
             detail='Permission not found'
         )
-    else:
-        return permission
+    return permission
 
 
 @perms_router.put('/{perm_name}', response_model=schemas.PermissionSchema)
@@ -58,39 +61,148 @@ def update_permission(
     perm_data: schemas.PermissionUpdate,
     dba: Session = Depends(deps.get_db)
 ):
-    try:
-        permission = cruds.get_perm_by_name(name=perm_name, db=dba)
-    except NoResultFound:
+    permission = cruds.get_perm_by_name(name=perm_name, db=dba)
+    if not permission:
         raise HTTPException(
             status_code=404,
             detail='Permission not found'
         )
-    else:
-        perm_update_dict = perm_data.dict(exclude_unset=True)
-        if len(perm_update_dict) < 1:
-            raise HTTPException(
-                status_code=400,
-                detail='Invalid request'
-            )
-        for key, value in perm_update_dict.items():
-            setattr(permission, key, value)
-        dba.commit()
-        dba.refresh(permission)
-        return permission
+    perm_update_dict = perm_data.dict(exclude_unset=True)
+    if len(perm_update_dict) < 1:
+        raise HTTPException(
+            status_code=400,
+            detail='Invalid request'
+        )
+    for key, value in perm_update_dict.items():
+        setattr(permission, key, value)
+    dba.commit()
+    dba.refresh(permission)
+    return permission
 
 
 @perms_router.delete('/{perm_name}')
 def delete_permission(perm_name: str, dba: Session = Depends(deps.get_db)):
-    try:
-        tag = cruds.get_perm_by_name(db=dba, name=perm_name)
-    except NoResultFound:
+    permission = cruds.get_perm_by_name(db=dba, name=perm_name)
+    if not permission:
         raise HTTPException(
             status_code=404,
             detail='Permission not found'
         )
+    dba.query(models.Permission). \
+        filter(models.Permission.name == perm_name). \
+        delete()
+    dba.commit()
+    return {'detail': 'Permission deleted successfully.'}
+
+
+#Roles
+@roles_router.post('',
+    status_code=201,
+    response_model=schemas.RoleSchema
+)
+def create_role(
+    role_data: schemas.RoleCreate,
+    dba: Session = Depends(deps.get_db)
+):
+    try:
+        role = cruds.create_role(db=dba, role_data=role_data)
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=403,
+            detail='Duplicate role not allowed'
+        )
     else:
-        dba.query(models.Permission). \
-            filter(models.Permission.name == perm_name). \
-            delete()
-        dba.commit()
-        return {'detail': 'Permission deleted successfully.'}
+        return role
+
+
+@roles_router.get('', response_model=List[schemas.RoleSchema])
+def list_roles(dba: Session = Depends(deps.get_db)):
+    return dba.query(models.Role).all()
+
+
+@roles_router.get('/{role_name}',response_model=schemas.RoleSchema)
+def role_detail(role_name: str, dba: Session = Depends(deps.get_db)):
+    role = cruds.get_role_by_name(name=role_name, db=dba)
+    if not role:
+        raise HTTPException(
+            status_code=404,
+            detail='Role not found'
+        )
+    return role
+
+
+@roles_router.put(
+    '/{role_name}',
+    response_model=schemas.RoleSchema
+)
+def update_role(
+    role_name: str,
+    role_data: schemas.RoleUpdate,
+    dba: Session = Depends(deps.get_db)
+):
+    role = cruds.get_role_by_name(name=role_name, db=dba)
+    if not role:
+        raise HTTPException(
+            status_code=404,
+            detail='Role not found'
+        )
+    role_dict = role_data.dict(exclude_unset=True)
+    try:
+        perms = role_dict.pop('permissions')
+    except KeyError:
+        pass
+    else:
+        for perm_name in perms:
+            perm = cruds.get_perm_by_name(name=perm_name, db=dba)
+            if perm:
+                role.permissions.append(perm)
+
+    for key, value in role_dict.items():
+        setattr(role, key, value)
+    dba.commit()
+    dba.refresh(role)
+    return role
+
+
+@roles_router.delete('/{role_name}')
+def delete_role(role_name: str, dba: Session = Depends(deps.get_db)):
+    role = cruds.get_role_by_name(db=dba, name=role_name)
+    if not role:
+        raise HTTPException(
+            status_code=404,
+            detail='Role not found'
+        )
+    dba.query(models.Role). \
+        filter(models.Role.name == role_name). \
+        delete()
+    dba.commit()
+    return {'detail': 'Role deleted successfully.'}
+
+
+@roles_router.delete(
+    '/{role_name}/permissions',
+    response_model=schemas.RoleSchema
+)
+def remove_permission_from_role(
+    role_name: str,
+    perms_to_delete: schemas.RemoveRolePermission,
+    dba: Session = Depends(deps.get_db)
+):
+    role = cruds.get_role_by_name(db=dba, name=role_name)
+    if not role:
+        raise HTTPException(
+            status_code=404,
+            detail='Role not found'
+        )
+    perms = perms_to_delete.dict(exclude_unset=True)['permissions']
+    for perm_name in perms:
+        perm = cruds.get_perm_by_name(name=perm_name, db=dba)
+        if perm:
+            try:
+                role.permissions.remove(perm)
+            except ValueError:
+                pass
+
+    dba.commit()
+    dba.refresh(role)
+    return role
