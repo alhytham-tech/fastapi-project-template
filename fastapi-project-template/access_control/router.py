@@ -61,42 +61,38 @@ def update_permission(
     perm_data: schemas.PermissionUpdate,
     dba: Session = Depends(deps.get_db)
 ):
-    try:
-        permission = cruds.get_perm_by_name(name=perm_name, db=dba)
-    except NoResultFound:
+    permission = cruds.get_perm_by_name(name=perm_name, db=dba)
+    if not permission:
         raise HTTPException(
             status_code=404,
             detail='Permission not found'
         )
-    else:
-        perm_update_dict = perm_data.dict(exclude_unset=True)
-        if len(perm_update_dict) < 1:
-            raise HTTPException(
-                status_code=400,
-                detail='Invalid request'
-            )
-        for key, value in perm_update_dict.items():
-            setattr(permission, key, value)
-        dba.commit()
-        dba.refresh(permission)
-        return permission
+    perm_update_dict = perm_data.dict(exclude_unset=True)
+    if len(perm_update_dict) < 1:
+        raise HTTPException(
+            status_code=400,
+            detail='Invalid request'
+        )
+    for key, value in perm_update_dict.items():
+        setattr(permission, key, value)
+    dba.commit()
+    dba.refresh(permission)
+    return permission
 
 
 @perms_router.delete('/{perm_name}')
 def delete_permission(perm_name: str, dba: Session = Depends(deps.get_db)):
-    try:
-        tag = cruds.get_perm_by_name(db=dba, name=perm_name)
-    except NoResultFound:
+    permission = cruds.get_perm_by_name(db=dba, name=perm_name)
+    if not permission:
         raise HTTPException(
             status_code=404,
             detail='Permission not found'
         )
-    else:
-        dba.query(models.Permission). \
-            filter(models.Permission.name == perm_name). \
-            delete()
-        dba.commit()
-        return {'detail': 'Permission deleted successfully.'}
+    dba.query(models.Permission). \
+        filter(models.Permission.name == perm_name). \
+        delete()
+    dba.commit()
+    return {'detail': 'Permission deleted successfully.'}
 
 
 #Roles
