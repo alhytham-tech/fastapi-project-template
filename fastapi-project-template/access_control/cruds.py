@@ -11,3 +11,9 @@ def create_permission(db: Session, perm_data: schemas.PermissionCreate):
     db.commit()
     db.refresh(permission)
     return permission
+
+
+def get_perm_by_name(db: Session, name: str):
+    return db.query(models.Permission). \
+        filter(models.Permission.name == name). \
+        one()
