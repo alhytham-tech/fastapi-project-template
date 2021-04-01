@@ -16,7 +16,7 @@ def create_permission(db: Session, perm_data: schemas.PermissionCreate):
 def get_perm_by_name(db: Session, name: str):
     return db.query(models.Permission). \
         filter(models.Permission.name == name). \
-        one()
+        first()
 
 
 def create_role(db: Session, role_data: schemas.RoleCreate):

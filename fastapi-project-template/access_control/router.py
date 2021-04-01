@@ -46,15 +46,13 @@ def list_permissions(dba: Session = Depends(deps.get_db)):
 
 @perms_router.get('/{perm_name}',response_model=schemas.PermissionSchema)
 def permission_detail(perm_name: str, dba: Session = Depends(deps.get_db)):
-    try:
-        permission = cruds.get_perm_by_name(name=perm_name, db=dba)
-    except NoResultFound:
+    permission = cruds.get_perm_by_name(name=perm_name, db=dba)
+    if not permission:
         raise HTTPException(
             status_code=404,
             detail='Permission not found'
         )
-    else:
-        return permission
+    return permission
 
 
 @perms_router.put('/{perm_name}', response_model=schemas.PermissionSchema)
