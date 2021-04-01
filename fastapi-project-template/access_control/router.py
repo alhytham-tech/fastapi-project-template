@@ -177,3 +177,32 @@ def delete_role(role_name: str, dba: Session = Depends(deps.get_db)):
         delete()
     dba.commit()
     return {'detail': 'Role deleted successfully.'}
+
+
+@roles_router.delete(
+    '/{role_name}/permissions',
+    response_model=schemas.RoleSchema
+)
+def remove_permission_from_role(
+    role_name: str,
+    perms_to_delete: schemas.RemoveRolePermission,
+    dba: Session = Depends(deps.get_db)
+):
+    role = cruds.get_role_by_name(db=dba, name=role_name)
+    if not role:
+        raise HTTPException(
+            status_code=404,
+            detail='Role not found'
+        )
+    perms = perms_to_delete.dict(exclude_unset=True)['permissions']
+    for perm_name in perms:
+        perm = cruds.get_perm_by_name(name=perm_name, db=dba)
+        if perm:
+            try:
+                role.permissions.remove(perm)
+            except ValueError:
+                pass
+
+    dba.commit()
+    dba.refresh(role)
+    return role
