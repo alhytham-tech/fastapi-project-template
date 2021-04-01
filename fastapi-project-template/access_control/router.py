@@ -13,8 +13,13 @@ perms_router = APIRouter(
     prefix='/permissions',
     tags=['Permissions']
 )
+roles_router = APIRouter(
+    prefix='/roles',
+    tags=['Roles']
+)
 
 
+# Permissions
 @perms_router.post('',
     status_code=201,
     response_model=schemas.PermissionSchema
@@ -27,8 +32,8 @@ def create_permission(
         permission = cruds.create_permission(db=dba, perm_data=perm_data)
     except IntegrityError as e:
         raise HTTPException(
-            status_code=400,
-            detail='This permission name is already in use'
+            status_code=403,
+            detail='Duplicate permission not allowed'
         )
     else:
         return permission
