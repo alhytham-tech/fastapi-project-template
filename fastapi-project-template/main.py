@@ -9,6 +9,7 @@ from fastapi.openapi.docs import (
 )
 
 from config import db
+from access_control import router as access_control_router
 
 
 
@@ -65,3 +66,4 @@ if USE_LOCAL_DOCS_FILES:
     app.include_router(local_docs_router)
 
 # Include Routers
+app.include_router(access_control_router.perms_router)

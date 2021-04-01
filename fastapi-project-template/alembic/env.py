@@ -14,6 +14,7 @@ sys.path.insert(0, os.getcwd())
 # end
 
 from config.db import DB_URL
+from access_control import models
 
 
 # this is the Alembic Config object, which provides
