@@ -99,3 +99,23 @@ def delete_permission(perm_name: str, dba: Session = Depends(deps.get_db)):
             delete()
         dba.commit()
         return {'detail': 'Permission deleted successfully.'}
+
+
+#Roles
+@roles_router.post('',
+    status_code=201,
+    response_model=schemas.RoleSchema
+)
+def create_role(
+    role_data: schemas.RoleCreate,
+    dba: Session = Depends(deps.get_db)
+):
+    try:
+        role = cruds.create_role(db=dba, role_data=role_data)
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=403,
+            detail='Duplicate role not allowed'
+        )
+    else:
+        return role
