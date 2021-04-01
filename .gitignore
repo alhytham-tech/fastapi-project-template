@@ -1,0 +1,15 @@
+# Python compile stuff
+__pycache__
+*.pyc
+
+# Environments
+.env
+venv/
+
+# Editors and IDE
+.idea
+.vscode/
+
+# Mac-Stuff
+.DS_Store
+cloud_storage_key.json
