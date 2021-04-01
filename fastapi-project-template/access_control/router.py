@@ -9,7 +9,6 @@ from access_control import cruds, models, schemas
 
 
 
-
 perms_router = APIRouter(
     prefix='/permissions',
     tags=['Permissions']
@@ -78,3 +77,20 @@ def update_permission(
         dba.commit()
         dba.refresh(permission)
         return permission
+
+
+@perms_router.delete('/{perm_name}')
+def delete_permission(perm_name: str, dba: Session = Depends(deps.get_db)):
+    try:
+        tag = cruds.get_perm_by_name(db=dba, name=perm_name)
+    except NoResultFound:
+        raise HTTPException(
+            status_code=404,
+            detail='Permission not found'
+        )
+    else:
+        dba.query(models.Permission). \
+            filter(models.Permission.name == perm_name). \
+            delete()
+        dba.commit()
+        return {'detail': 'Permission deleted successfully.'}
