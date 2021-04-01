@@ -128,12 +128,12 @@ def list_roles(dba: Session = Depends(deps.get_db)):
 
 @roles_router.get('/{role_name}',response_model=schemas.RoleSchema)
 def role_detail(role_name: str, dba: Session = Depends(deps.get_db)):
-    try:
-        role = cruds.get_role_by_name(name=role_name, db=dba)
-    except NoResultFound:
+    role = cruds.get_role_by_name(name=role_name, db=dba)
+    if not role:
         raise HTTPException(
             status_code=404,
             detail='Role not found'
         )
-    else:
-        return role
+    return role
+
+

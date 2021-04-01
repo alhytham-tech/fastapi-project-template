@@ -31,4 +31,4 @@ def create_role(db: Session, role_data: schemas.RoleCreate):
 def get_role_by_name(db: Session, name: str):
     return db.query(models.Role). \
         filter(models.Role.name == name). \
-        one()
+        first()
