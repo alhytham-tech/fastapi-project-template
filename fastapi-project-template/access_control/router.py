@@ -1,5 +1,6 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -37,3 +38,16 @@ def create_permission(
 @perms_router.get('', response_model=List[schemas.PermissionSchema])
 def list_permissions(dba: Session = Depends(deps.get_db)):
     return dba.query(models.Permission).all()
+
+
+@perms_router.get('/{perm_name}',response_model=schemas.PermissionSchema)
+def permission_detail(perm_name: str, dba: Session = Depends(deps.get_db)):
+    try:
+        permission = cruds.get_perm_by_name(name=perm_name, db=dba)
+    except NoResultFound:
+        raise HTTPException(
+            status_code=404,
+            detail='Permission not found'
+        )
+    else:
+        return permission
