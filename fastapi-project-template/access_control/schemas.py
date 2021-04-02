@@ -41,3 +41,25 @@ class RoleSchema(BaseUACSchemaMixin):
     
     class Config:
         orm_mode = True
+
+
+class GroupCreate(BaseModel):
+    name: str
+    description: Optional[str]
+
+
+class GroupUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    roles: Optional[List[str]]
+
+
+class RemoveGroupRole(BaseModel):
+    roles: List[str]
+
+
+class GroupSchema(BaseUACSchemaMixin):
+    roles: List[RoleSchema]
+    
+    class Config:
+        orm_mode = True
