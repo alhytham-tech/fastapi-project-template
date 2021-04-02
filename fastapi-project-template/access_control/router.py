@@ -17,6 +17,10 @@ roles_router = APIRouter(
     prefix='/roles',
     tags=['Roles']
 )
+groups_router = APIRouter(
+    prefix='/groups',
+    tags=['Groups']
+)
 
 
 # Permissions

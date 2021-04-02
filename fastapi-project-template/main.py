@@ -68,3 +68,4 @@ if USE_LOCAL_DOCS_FILES:
 # Include Routers
 app.include_router(access_control_router.perms_router)
 app.include_router(access_control_router.roles_router)
+app.include_router(access_control_router.groups_router)
