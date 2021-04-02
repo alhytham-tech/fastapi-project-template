@@ -94,7 +94,6 @@ def delete_user(uuid: UUID4, dba: Session = Depends(deps.get_db)):
 
 @users_router.post(
     '/{uuid}/groups',
-    status_code=201,
     response_model=schemas.UserSchema
 )
 def add_group_to_user(
@@ -119,3 +118,29 @@ def add_group_to_user(
     dba.refresh(user)
     return user
 
+
+@users_router.delete(
+    '/{uuid}/groups',
+    response_model=schemas.UserSchema
+)
+def remove_group_from_user(
+    uuid: UUID4, groups: schemas.UserGroup, dba: Session = Depends(deps.get_db)
+):
+    user = cruds.get_user_by_uuid(db=dba, uuid=uuid)
+    group_list = groups.dict().pop('groups')
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail='User not found'
+        )
+    for group_name in group_list:
+        group = get_group_by_name(name=group_name, db=dba)
+        if not group:
+            raise HTTPException(
+                status_code=404,
+                detail=f'{group_name} is not found'
+            )
+        user.groups.remove(group)
+    dba.commit()
+    dba.refresh(user)
+    return user
