@@ -236,3 +236,13 @@ def create_group(
 def list_groups(dba: Session = Depends(deps.get_db)):
     return dba.query(models.Group).all()
 
+
+@groups_router.get('/{group_name}',response_model=schemas.GroupSchema)
+def group_detail(group_name: str, dba: Session = Depends(deps.get_db)):
+    group = cruds.get_group_by_name(name=group_name, db=dba)
+    if not group:
+        raise HTTPException(
+            status_code=404,
+            detail='Group not found'
+        )
+    return group
