@@ -246,3 +246,37 @@ def group_detail(group_name: str, dba: Session = Depends(deps.get_db)):
             detail='Group not found'
         )
     return group
+
+
+@groups_router.put(
+    '/{group_name}',
+    response_model=schemas.GroupSchema
+)
+def update_group(
+    group_name: str,
+    group_data: schemas.GroupUpdate,
+    dba: Session = Depends(deps.get_db)
+):
+    group = cruds.get_group_by_name(name=group_name, db=dba)
+    if not group:
+        raise HTTPException(
+            status_code=404,
+            detail='Group not found'
+        )
+    group_dict = group_data.dict(exclude_unset=True)
+    try:
+        roles = group_dict.pop('roles')
+    except KeyError:
+        pass
+    else:
+        for role_name in roles:
+            role = cruds.get_role_by_name(name=role_name, db=dba)
+            if role:
+                group.roles.append(role)
+
+    for key, value in group_dict.items():
+        setattr(group, key, value)
+    dba.commit()
+    dba.refresh(group)
+    return group
+
