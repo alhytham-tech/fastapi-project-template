@@ -23,7 +23,7 @@ groups_router = APIRouter(
 )
 
 
-# Permissions
+# ================ Permissions ================
 @perms_router.post('',
     status_code=201,
     response_model=schemas.PermissionSchema
@@ -99,7 +99,7 @@ def delete_permission(perm_name: str, dba: Session = Depends(deps.get_db)):
     return {'detail': 'Permission deleted successfully.'}
 
 
-#Roles
+# ================ Roles ================
 @roles_router.post('',
     status_code=201,
     response_model=schemas.RoleSchema
@@ -210,3 +210,23 @@ def remove_permission_from_role(
     dba.commit()
     dba.refresh(role)
     return role
+
+
+# ================ Groups ================
+@groups_router.post('',
+    status_code=201,
+    response_model=schemas.GroupSchema
+)
+def create_group(
+    group_data: schemas.GroupCreate,
+    dba: Session = Depends(deps.get_db)
+):
+    try:
+        group = cruds.create_group(db=dba, group_data=group_data)
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=403,
+            detail='Duplicate group not allowed'
+        )
+    else:
+        return group
