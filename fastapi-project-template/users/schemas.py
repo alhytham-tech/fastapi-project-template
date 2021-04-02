@@ -32,15 +32,16 @@ class UserSchema(BaseSchemaMixin):
     middlename: str
     is_active: bool
     is_superuser: bool
-    group: GroupSchema = None
+    groups: List[GroupSchema]
 
     @property
     def permissions(self) -> List[str]:
         perms = []
-        for role in self.group.roles:
-            for perm in role.permissions:
-                perms.append(perm.name)
-        return perms
+        for group in self.groups:
+            for role in group.roles:
+                for perm in role.permissions:
+                    perms.append(perm.name)
+        return list(set(perms))
 
     def has_permission(self, permission: str) -> bool:
         return permission in self.permissions
