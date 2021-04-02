@@ -302,7 +302,7 @@ def delete_group(group_name: str, dba: Session = Depends(deps.get_db)):
 )
 def remove_role_from_group(
     group_name: str,
-    roles_to_delete: schemas.RemoveRolePermission,
+    roles_to_delete: schemas.RemoveGroupRole,
     dba: Session = Depends(deps.get_db)
 ):
     group = cruds.get_group_by_name(db=dba, name=group_name)
@@ -311,7 +311,7 @@ def remove_role_from_group(
             status_code=404,
             detail='Role not found'
         )
-    roles = roles_to_delete.dict(exclude_unset=True)['permissions']
+    roles = roles_to_delete.dict(exclude_unset=True)['roles']
     for role_name in roles:
         role = cruds.get_role_by_name(name=role_name, db=dba)
         if role:
