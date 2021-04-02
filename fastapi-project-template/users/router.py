@@ -49,3 +49,28 @@ def user_detail(uuid: UUID4, dba: Session = Depends(deps.get_db)):
         )
     return user
 
+
+@users_router.put('/{uuid}', response_model=schemas.UserSchema)
+def update_user(
+    uuid: UUID4,
+    user_data: schemas.UserUpdate,
+    dba: Session = Depends(deps.get_db)
+):
+    user = cruds.get_user_by_uuid(uuid=uuid, db=dba)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail='User not found'
+        )
+    user_update_dict = user_data.dict(exclude_unset=True)
+    if len(user_update_dict) < 1:
+        raise HTTPException(
+            status_code=400,
+            detail='Invalid request'
+        )
+    for key, value in user_update_dict.items():
+        setattr(user, key, value)
+    dba.commit()
+    dba.refresh(user)
+    return user
+
