@@ -280,3 +280,18 @@ def update_group(
     dba.refresh(group)
     return group
 
+
+@groups_router.delete('/{group_name}')
+def delete_group(group_name: str, dba: Session = Depends(deps.get_db)):
+    group = cruds.get_group_by_name(db=dba, name=group_name)
+    if not group:
+        raise HTTPException(
+            status_code=404,
+            detail='Group not found'
+        )
+    dba.query(models.Group). \
+        filter(models.Group.name == group_name). \
+        delete()
+    dba.commit()
+    return {'detail': 'Group deleted successfully.'}
+
