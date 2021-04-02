@@ -74,3 +74,17 @@ def update_user(
     dba.refresh(user)
     return user
 
+
+@users_router.delete('/{uuid}')
+def delete_user(uuid: UUID4, dba: Session = Depends(deps.get_db)):
+    user = cruds.get_user_by_uuid(db=dba, uuid=uuid)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail='User not found'
+        )
+    dba.query(models.User). \
+        filter(models.User.uuid == uuid). \
+        delete()
+    dba.commit()
+    return {'detail': 'User deleted successfully.'}
