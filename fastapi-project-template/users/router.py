@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 import dependencies as deps
 from users import cruds, models, schemas
 from access_control.cruds import get_group_by_name
+from utils.users import get_password_hash, verify_password
 
 
 
@@ -144,3 +145,27 @@ def remove_group_from_user(
     dba.commit()
     dba.refresh(user)
     return user
+
+
+@users_router.post('/{uuid}/password')
+def change_user_password(
+    uuid: UUID4,
+    passwords: schemas.ChagePasswordFromDashboard,
+    dba: Session = Depends(deps.get_db)
+):
+    user = cruds.get_user_by_uuid(db=dba, uuid=uuid)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail='User not found'
+        )
+    if not verify_password(passwords.current_password, user.password_hash):
+        raise HTTPException(
+            status_code=403,
+            detail='Current password is incorrect'
+        )
+    new_password_hash = get_password_hash(passwords.new_password)
+    user.password_hash = new_password_hash
+    dba.commit()
+    dba.refresh(user)
+    return {'detail': 'Password changed successfully.'}

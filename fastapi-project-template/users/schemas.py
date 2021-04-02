@@ -25,6 +25,11 @@ class UserUpdate(BaseModel):
     middlename: Optional[str] = None
 
 
+class ChagePasswordFromDashboard(BaseModel):
+    current_password: str
+    new_password: str
+
+
 class UserSchema(BaseSchemaMixin):
     email: EmailStr
     firstname: str
