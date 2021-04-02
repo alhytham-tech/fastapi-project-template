@@ -295,3 +295,31 @@ def delete_group(group_name: str, dba: Session = Depends(deps.get_db)):
     dba.commit()
     return {'detail': 'Group deleted successfully.'}
 
+
+@groups_router.delete(
+    '/{group_name}/roles',
+    response_model=schemas.GroupSchema
+)
+def remove_role_from_group(
+    group_name: str,
+    roles_to_delete: schemas.RemoveRolePermission,
+    dba: Session = Depends(deps.get_db)
+):
+    group = cruds.get_group_by_name(db=dba, name=group_name)
+    if not group:
+        raise HTTPException(
+            status_code=404,
+            detail='Role not found'
+        )
+    roles = roles_to_delete.dict(exclude_unset=True)['permissions']
+    for role_name in roles:
+        role = cruds.get_role_by_name(name=role_name, db=dba)
+        if role:
+            try:
+                group.roles.remove(role)
+            except ValueError:
+                pass
+
+    dba.commit()
+    dba.refresh(group)
+    return group
