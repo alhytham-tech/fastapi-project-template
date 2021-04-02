@@ -230,3 +230,9 @@ def create_group(
         )
     else:
         return group
+
+
+@groups_router.get('', response_model=List[schemas.GroupSchema])
+def list_groups(dba: Session = Depends(deps.get_db)):
+    return dba.query(models.Group).all()
+
