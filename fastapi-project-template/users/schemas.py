@@ -14,12 +14,15 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserGroup(BaseModel):
+    groups: List[str]
+
+
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     firstname: Optional[str] = None
     lastname: Optional[str] = None
     middlename: Optional[str] = None
-    password: Optional[str] = None
 
 
 class UserSchema(BaseSchemaMixin):

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 import dependencies as deps
 from users import cruds, models, schemas
+from access_control.cruds import get_group_by_name
 
 
 
@@ -68,6 +69,7 @@ def update_user(
             status_code=400,
             detail='Invalid request'
         )
+
     for key, value in user_update_dict.items():
         setattr(user, key, value)
     dba.commit()
@@ -88,3 +90,32 @@ def delete_user(uuid: UUID4, dba: Session = Depends(deps.get_db)):
         delete()
     dba.commit()
     return {'detail': 'User deleted successfully.'}
+
+
+@users_router.post(
+    '/{uuid}/groups',
+    status_code=201,
+    response_model=schemas.UserSchema
+)
+def add_group_to_user(
+    uuid: UUID4, groups: schemas.UserGroup, dba: Session = Depends(deps.get_db)
+):
+    user = cruds.get_user_by_uuid(db=dba, uuid=uuid)
+    group_list = groups.dict().pop('groups')
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail='User not found'
+        )
+    for group_name in group_list:
+        group = get_group_by_name(name=group_name, db=dba)
+        if not group:
+            raise HTTPException(
+                status_code=404,
+                detail=f'{group_name} is not found'
+            )
+        user.groups.append(group)
+    dba.commit()
+    dba.refresh(user)
+    return user
+
