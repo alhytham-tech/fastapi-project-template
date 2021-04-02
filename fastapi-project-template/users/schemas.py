@@ -14,6 +14,14 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    firstname: Optional[str] = None
+    lastname: Optional[str] = None
+    middlename: Optional[str] = None
+    password: Optional[str] = None
+
+
 class UserSchema(BaseSchemaMixin):
     email: EmailStr
     firstname: str
