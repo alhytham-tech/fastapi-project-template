@@ -1,4 +1,5 @@
 from typing import List
+from pydantic import UUID4
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
@@ -36,3 +37,15 @@ def create_user(
 @users_router.get('', response_model=List[schemas.UserSchema])
 def list_users(dba: Session = Depends(deps.get_db)):
     return dba.query(models.User).all()
+
+
+@users_router.get('/{uuid}', response_model=schemas.UserSchema)
+def user_detail(uuid: UUID4, dba: Session = Depends(deps.get_db)):
+    user = cruds.get_user_by_uuid(uuid=uuid, db=dba)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail='User not found'
+        )
+    return user
+
