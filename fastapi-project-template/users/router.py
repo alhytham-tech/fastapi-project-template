@@ -32,3 +32,7 @@ def create_user(
         )
     return user
 
+
+@users_router.get('', response_model=List[schemas.UserSchema])
+def list_users(dba: Session = Depends(deps.get_db)):
+    return dba.query(models.User).all()
