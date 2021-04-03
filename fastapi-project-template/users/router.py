@@ -7,18 +7,20 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from fastapi.security import OAuth2PasswordRequestForm
 
 import dependencies as deps
 from users import cruds, models, schemas
 from access_control.cruds import get_group_by_name
-from utils.users import get_password_hash, verify_password
+from utils.users import get_password_hash, verify_password, create_access_token
 from utils.mail import send_dummy_mail
 
 
 
 users_router = APIRouter(
     prefix='/users',
-    tags=['User']
+    tags=['User'],
+    dependencies=[Depends(deps.get_current_user)]
 )
 
 auth_router = APIRouter(
@@ -26,6 +28,29 @@ auth_router = APIRouter(
     tags=['Authentication']
 )
 
+
+@auth_router.post(
+    '/docs-token', response_model=schemas.Token, include_in_schema=False
+)
+def docs_authentication(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(deps.get_db)
+):
+    user = cruds.authenticate_user(
+        dba=db,
+        email=form_data.username,
+        password=form_data.password
+    )
+    token_data_to_encode = {
+        'data': {
+            'email': user.email,
+            'firstname': user.firstname,
+            'lastname': user.lastname,
+            'permissions': user.permissions
+        }
+    }
+    access_token = create_access_token(token_data_to_encode)
+    return {'access_token': access_token, 'token_type': 'bearer'}
 
 @auth_router.post('/forgot-password')
 def request_password_reset(email: EmailStr, dba: Session = Depends(deps.get_db)):
