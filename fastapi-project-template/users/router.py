@@ -1,5 +1,8 @@
+import os
+from datetime import datetime, timedelta
+from decouple import config as decouple_config
 from typing import List
-from pydantic import UUID4
+from pydantic import EmailStr, UUID4
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
@@ -9,6 +12,7 @@ import dependencies as deps
 from users import cruds, models, schemas
 from access_control.cruds import get_group_by_name
 from utils.users import get_password_hash, verify_password
+from utils.mail import send_dummy_mail
 
 
 
@@ -16,6 +20,76 @@ users_router = APIRouter(
     prefix='/users',
     tags=['User']
 )
+
+auth_router = APIRouter(
+    prefix='/auth',
+    tags=['Authentication']
+)
+
+
+@auth_router.post('/forgot-password')
+def request_password_reset(email: EmailStr, dba: Session = Depends(deps.get_db)):
+    sent_email = (
+        "We've emailed you instructions for setting your password. "
+        "If an account exists with the email you entered, you should "
+        "receive them shortly."
+    )
+    user = cruds.get_user_by_email(db=dba, email=email)
+    if not user:
+        return {'detail': sent_email}
+
+    PASSWORD_RESET_EXPIRES = decouple_config('PASSWORD_RESET_EXPIRES', cast=int, default=1440)
+    expires = datetime.now() + timedelta(minutes=PASSWORD_RESET_EXPIRES)
+    request = models.PasswordReset(email=email, expires=expires)
+    dba.add(request)
+    try:
+        dba.commit()
+    except IntegrityError:
+        dba.rollback()
+        dba.query(models.PasswordReset). \
+            filter(models.PasswordReset.email == email). \
+            delete()
+        dba.add(request)
+        dba.commit()
+    message = (
+        'Hi,\n\n'
+        'you are receiving this email because we received a password\n'
+        'reset request for your account. Use this token for your password\n'
+        f'reset: {request.uuid}.\n\n'
+        'If you did not request a password reset, no further action is required.'
+    )
+    send_dummy_mail(subject="Reset Your Password", message=message, to=request.email)
+    return {"detail": sent_email}
+
+
+@auth_router.post('/reset-password/{reset_uuid}')
+def reset_password(
+    reset_uuid: str,
+    reset_data: schemas.ResetPassword,
+    dba: Session = Depends(deps.get_db)
+):
+    invalid_or_expired = (
+        "The password reset link is invalid, possibly because it "
+        "has already been used or it has expired. Please request a "
+        "new password reset."
+    )
+    now = datetime.now()
+    reset_request = cruds.get_password_reset_by_uuid( db=dba, uuid=reset_uuid)
+    if not reset_request:
+        return {"detail": invalid_or_expired}
+    if now > reset_request.expires:
+        dba.query(models.PasswordReset). \
+            filter(models.PasswordReset.uuid == reset_uuid). \
+            delete()
+        dba.commit()
+        return {"detail": invalid_or_expired}
+
+    new_hashed_password = get_password_hash(reset_data.password)
+    user = cruds.get_user_by_email(db=dba, email=reset_request.email)
+    user.password_hash = new_hashed_password
+    dba.delete(reset_request)
+    dba.commit()
+    return {'detail': 'Password changed successfully.'}
 
 
 @users_router.post('',

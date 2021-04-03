@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ARRAY
 
@@ -25,3 +25,8 @@ class User(BaseMixin, Base):
     is_superuser = Column(Boolean, default=False)
 
     groups = relationship("Group", secondary=user_group)
+
+
+class PasswordReset(BaseMixin, Base):
+    email = Column(String(255), unique=True, nullable=False)
+    expires = Column(DateTime, nullable=False)

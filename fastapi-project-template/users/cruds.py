@@ -25,6 +25,12 @@ def get_user_by_uuid(db: Session, uuid: UUID4):
     return db.query(models.User).filter(models.User.uuid == uuid).first()
 
 
+def get_password_reset_by_uuid(db: Session, uuid: UUID4):
+    return db.query(models.PasswordReset). \
+        filter(models.PasswordReset.uuid == uuid). \
+        first()
+
+
 def authenticate_user(email: EmailStr, password: str, dba: Session):
     user = get_user_by_email(db=dba, email=user_data.email)
     if not user:

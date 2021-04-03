@@ -53,3 +53,7 @@ class UserSchema(BaseSchemaMixin):
 
     class Config:
         orm_mode = True
+
+
+class ResetPassword(BaseModel):
+    password: str
