@@ -1,7 +1,9 @@
 from decouple import config as decouple_config
+from decouple import Csv
 from fastapi import FastAPI
 from fastapi.routing import APIRouter
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import (
     get_redoc_html,
     get_swagger_ui_html,
@@ -60,6 +62,19 @@ db.Base.metadata.create_all(bind=db.engine)
 
 # FastAPI app config
 app = FastAPI(title=APP_TITLE, docs_url=DOCS_URL, redoc_url=REDOC_URL)
+
+
+# CORS handling
+origins = decouple_config('CORS_ORIGINS', cast=Csv())
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 
 # Check if to use local docs files or not
 if USE_LOCAL_DOCS_FILES:
