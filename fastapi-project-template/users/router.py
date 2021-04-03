@@ -17,6 +17,10 @@ users_router = APIRouter(
     tags=['User']
 )
 
+auth_router = APIRouter(
+    prefix='/auth',
+    tags=['Authentication']
+)
 
 @users_router.post('',
     status_code=201,
