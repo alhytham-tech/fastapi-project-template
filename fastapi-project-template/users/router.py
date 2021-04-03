@@ -61,6 +61,37 @@ def request_password_reset(email: EmailStr, dba: Session = Depends(deps.get_db))
     send_dummy_mail(subject="Reset Your Password", message=message, to=request.email)
     return {"detail": sent_email}
 
+
+@auth_router.post('/reset-password/{reset_uuid}')
+def reset_password(
+    reset_uuid: str,
+    reset_data: schemas.ResetPassword,
+    dba: Session = Depends(deps.get_db)
+):
+    invalid_or_expired = (
+        "The password reset link is invalid, possibly because it "
+        "has already been used or it has expired. Please request a "
+        "new password reset."
+    )
+    now = datetime.now()
+    reset_request = cruds.get_password_reset_by_uuid( db=dba, uuid=reset_uuid)
+    if not reset_request:
+        return {"detail": invalid_or_expired}
+    if now > reset_request.expires:
+        dba.query(models.PasswordReset). \
+            filter(models.PasswordReset.uuid == reset_uuid). \
+            delete()
+        dba.commit()
+        return {"detail": invalid_or_expired}
+
+    new_hashed_password = get_password_hash(reset_data.password)
+    user = cruds.get_user_by_email(db=dba, email=reset_request.email)
+    user.password_hash = new_hashed_password
+    dba.delete(reset_request)
+    dba.commit()
+    return {'detail': 'Password changed successfully.'}
+
+
 @users_router.post('',
     status_code=201,
     response_model=schemas.UserSchema
