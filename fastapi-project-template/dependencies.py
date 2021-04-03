@@ -5,6 +5,7 @@ from decouple import config as decouple_config
 from fastapi.security import OAuth2PasswordBearer
 
 from config import db
+from users import cruds as users_cruds, schemas as users_schema
 
 
 
@@ -25,6 +26,22 @@ def get_db():
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     user = users_schema.UserSchema.from_orm(
-        users_cruds.get_user_by_email(db=db, email=payload['email'])
+        users_cruds.get_user_by_email(db=db, email=payload['data']['email'])
     )
     return user
+
+
+class HasPermission:
+    def __init__(self, perms: list):
+        self.perms = perms
+
+    def __call__(
+        self, user: users_schema.UserSchema = Depends(get_current_user)
+        ):
+
+        for perm in self.perms:
+            if perm not in user.permissions:
+                raise HTTPException(
+                    status_code=403,
+                    detail='Permission denied'
+                )
