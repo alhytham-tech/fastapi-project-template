@@ -52,6 +52,29 @@ def docs_authentication(
     access_token = create_access_token(token_data_to_encode)
     return {'access_token': access_token, 'token_type': 'bearer'}
 
+
+@auth_router.post('/token', response_model=schemas.Token)
+def login(
+    user_data: schemas.Login = Depends(),
+    db: Session = Depends(deps.get_db)
+):
+    user = cruds.authenticate_user(
+        dba=db,
+        email=user_data.email,
+        password=user_data.password
+    )
+    token_data_to_encode = {
+        'data': {
+            'email': user.email,
+            'firstname': user.firstname,
+            'lastname': user.lastname,
+            'permissions': user.permissions
+        }
+    }
+    access_token = create_access_token(token_data_to_encode)
+    return {'access_token': access_token, 'token_type': 'bearer'}
+
+
 @auth_router.post('/forgot-password')
 def request_password_reset(email: EmailStr, dba: Session = Depends(deps.get_db)):
     sent_email = (
