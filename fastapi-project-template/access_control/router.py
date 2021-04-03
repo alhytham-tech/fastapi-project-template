@@ -24,9 +24,11 @@ groups_router = APIRouter(
 
 
 # ================ Permissions ================
-@perms_router.post('',
+@perms_router.post(
+    '',
     status_code=201,
-    response_model=schemas.PermissionSchema
+    response_model=schemas.PermissionSchema,
+    dependencies=[Depends(deps.HasPermission(['can_create_permission']))]
 )
 def create_permission(
     perm_data: schemas.PermissionCreate,
@@ -43,12 +45,20 @@ def create_permission(
         return permission
 
 
-@perms_router.get('', response_model=List[schemas.PermissionSchema])
+@perms_router.get(
+    '',
+    response_model=List[schemas.PermissionSchema],
+    dependencies=[Depends(deps.HasPermission(['can_view_permission']))]
+)
 def list_permissions(dba: Session = Depends(deps.get_db)):
     return dba.query(models.Permission).all()
 
 
-@perms_router.get('/{perm_name}',response_model=schemas.PermissionSchema)
+@perms_router.get(
+    '/{perm_name}',
+    response_model=schemas.PermissionSchema,
+    dependencies=[Depends(deps.HasPermission(['can_view_permission']))]
+)
 def permission_detail(perm_name: str, dba: Session = Depends(deps.get_db)):
     permission = cruds.get_perm_by_name(name=perm_name, db=dba)
     if not permission:
@@ -59,7 +69,11 @@ def permission_detail(perm_name: str, dba: Session = Depends(deps.get_db)):
     return permission
 
 
-@perms_router.put('/{perm_name}', response_model=schemas.PermissionSchema)
+@perms_router.put(
+    '/{perm_name}',
+    response_model=schemas.PermissionSchema,
+    dependencies=[Depends(deps.HasPermission(['can_modify_permission']))]
+)
 def update_permission(
     perm_name: str,
     perm_data: schemas.PermissionUpdate,
@@ -84,7 +98,10 @@ def update_permission(
     return permission
 
 
-@perms_router.delete('/{perm_name}')
+@perms_router.delete(
+    '/{perm_name}',
+    dependencies=[Depends(deps.HasPermission(['can_delete_permission']))]
+)
 def delete_permission(perm_name: str, dba: Session = Depends(deps.get_db)):
     permission = cruds.get_perm_by_name(db=dba, name=perm_name)
     if not permission:
@@ -100,9 +117,11 @@ def delete_permission(perm_name: str, dba: Session = Depends(deps.get_db)):
 
 
 # ================ Roles ================
-@roles_router.post('',
+@roles_router.post(
+    '',
     status_code=201,
-    response_model=schemas.RoleSchema
+    response_model=schemas.RoleSchema,
+    dependencies=[Depends(deps.HasPermission(['can_create_role']))]
 )
 def create_role(
     role_data: schemas.RoleCreate,
@@ -119,12 +138,20 @@ def create_role(
         return role
 
 
-@roles_router.get('', response_model=List[schemas.RoleSchema])
+@roles_router.get(
+    '',
+    response_model=List[schemas.RoleSchema],
+    dependencies=[Depends(deps.HasPermission(['can_view_role']))]
+)
 def list_roles(dba: Session = Depends(deps.get_db)):
     return dba.query(models.Role).all()
 
 
-@roles_router.get('/{role_name}',response_model=schemas.RoleSchema)
+@roles_router.get(
+    '/{role_name}',
+    response_model=schemas.RoleSchema,
+    dependencies=[Depends(deps.HasPermission(['can_view_role']))]
+)
 def role_detail(role_name: str, dba: Session = Depends(deps.get_db)):
     role = cruds.get_role_by_name(name=role_name, db=dba)
     if not role:
@@ -137,7 +164,8 @@ def role_detail(role_name: str, dba: Session = Depends(deps.get_db)):
 
 @roles_router.put(
     '/{role_name}',
-    response_model=schemas.RoleSchema
+    response_model=schemas.RoleSchema,
+    dependencies=[Depends(deps.HasPermission(['can_modify_role']))]
 )
 def update_role(
     role_name: str,
@@ -168,7 +196,10 @@ def update_role(
     return role
 
 
-@roles_router.delete('/{role_name}')
+@roles_router.delete(
+    '/{role_name}',
+    dependencies=[Depends(deps.HasPermission(['can_delete_role']))]
+)
 def delete_role(role_name: str, dba: Session = Depends(deps.get_db)):
     role = cruds.get_role_by_name(db=dba, name=role_name)
     if not role:
@@ -185,7 +216,8 @@ def delete_role(role_name: str, dba: Session = Depends(deps.get_db)):
 
 @roles_router.delete(
     '/{role_name}/permissions',
-    response_model=schemas.RoleSchema
+    response_model=schemas.RoleSchema,
+    dependencies=[Depends(deps.HasPermission(['can_delete_role']))]
 )
 def remove_permission_from_role(
     role_name: str,
@@ -213,9 +245,11 @@ def remove_permission_from_role(
 
 
 # ================ Groups ================
-@groups_router.post('',
+@groups_router.post(
+    '',
     status_code=201,
-    response_model=schemas.GroupSchema
+    response_model=schemas.GroupSchema,
+    dependencies=[Depends(deps.HasPermission(['can_create_group']))]
 )
 def create_group(
     group_data: schemas.GroupCreate,
@@ -232,12 +266,20 @@ def create_group(
         return group
 
 
-@groups_router.get('', response_model=List[schemas.GroupSchema])
+@groups_router.get(
+    '',
+    response_model=List[schemas.GroupSchema],
+    dependencies=[Depends(deps.HasPermission(['can_view_group']))]
+)
 def list_groups(dba: Session = Depends(deps.get_db)):
     return dba.query(models.Group).all()
 
 
-@groups_router.get('/{group_name}',response_model=schemas.GroupSchema)
+@groups_router.get(
+    '/{group_name}',
+    response_model=schemas.GroupSchema,
+    dependencies=[Depends(deps.HasPermission(['can_view_group']))]
+)
 def group_detail(group_name: str, dba: Session = Depends(deps.get_db)):
     group = cruds.get_group_by_name(name=group_name, db=dba)
     if not group:
@@ -250,7 +292,8 @@ def group_detail(group_name: str, dba: Session = Depends(deps.get_db)):
 
 @groups_router.put(
     '/{group_name}',
-    response_model=schemas.GroupSchema
+    response_model=schemas.GroupSchema,
+    dependencies=[Depends(deps.HasPermission(['can_modify_group']))]
 )
 def update_group(
     group_name: str,
@@ -281,7 +324,10 @@ def update_group(
     return group
 
 
-@groups_router.delete('/{group_name}')
+@groups_router.delete(
+    '/{group_name}',
+    dependencies=[Depends(deps.HasPermission(['can_delete_group']))]
+)
 def delete_group(group_name: str, dba: Session = Depends(deps.get_db)):
     group = cruds.get_group_by_name(db=dba, name=group_name)
     if not group:
@@ -298,7 +344,8 @@ def delete_group(group_name: str, dba: Session = Depends(deps.get_db)):
 
 @groups_router.delete(
     '/{group_name}/roles',
-    response_model=schemas.GroupSchema
+    response_model=schemas.GroupSchema,
+    dependencies=[Depends(deps.HasPermission(['can_delete_group']))]
 )
 def remove_role_from_group(
     group_name: str,
