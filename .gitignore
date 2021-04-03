@@ -13,3 +13,6 @@ venv/
 # Mac-Stuff
 .DS_Store
 cloud_storage_key.json
+
+# Own directories
+emails/
