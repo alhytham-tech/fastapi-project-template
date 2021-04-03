@@ -1,5 +1,6 @@
 from pydantic import EmailStr, UUID4
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 
 from users import models, schemas
 from utils.users import get_password_hash, verify_password
@@ -32,15 +33,15 @@ def get_password_reset_by_uuid(db: Session, uuid: UUID4):
 
 
 def authenticate_user(email: EmailStr, password: str, dba: Session):
-    user = get_user_by_email(db=dba, email=user_data.email)
+    user = get_user_by_email(db=dba, email=email)
     if not user:
         raise HTTPException(
-            status_code=401,
+            status_code=400,
             detail='Email and password do not match'
         )
-    if not verify_password(user_data.password, user.password_hash):
+    if not verify_password(password, user.password_hash):
         raise HTTPException(
-            status_code=401,
+            status_code=400,
             detail='Email and password do not match'
         )
-    return schema.UserSchema.from_orm(user) 
+    return schemas.UserSchema.from_orm(user) 
