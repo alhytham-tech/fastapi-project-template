@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from pydantic import EmailStr
 
 from users import models as users_models
 from access_control import models as ac_models
@@ -7,12 +8,12 @@ from utils.users import get_password_hash
 
 
 
-def init_db(db: Session):
+def init_db(db: Session, email: EmailStr, password: str):
     user_dict = {
-        'email': 'admin@example.com',
+        'email': email,
         'firstname': 'Super',
         'lastname': 'Admin',
-        'password_hash': get_password_hash('superadminpassword')
+        'password_hash': get_password_hash(password)
     }
     perms = ['can_create_permission', 'can_view_permission', 'can_modify_permission', 'can_delete_permission']
     role_perms = ['can_create_role', 'can_view_role', 'can_modify_role', 'can_delete_role']
