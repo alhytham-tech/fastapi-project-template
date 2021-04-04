@@ -58,7 +58,11 @@ async def redoc_html():
 
 
 # Create database tables
-db.Base.metadata.create_all(bind=db.engine)
+
+# Tables should be created with Alembic migrations
+# But if you don't want to use migrations, create
+# the tables un-commenting the next line
+# db.Base.metadata.create_all(bind=db.engine)
 
 # FastAPI app config
 app = FastAPI(title=APP_TITLE, docs_url=DOCS_URL, redoc_url=REDOC_URL)
