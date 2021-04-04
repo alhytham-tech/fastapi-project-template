@@ -34,7 +34,7 @@ class UserSchema(BaseSchemaMixin):
     email: EmailStr
     firstname: str
     lastname: str
-    middlename: str
+    middlename: Optional[str] = ''
     is_active: bool
     is_superuser: bool
     groups: List[GroupSchema]
