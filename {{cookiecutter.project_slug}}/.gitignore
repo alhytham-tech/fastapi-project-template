@@ -3,6 +3,7 @@ __pycache__
 *.pyc
 
 # Environments
+.env
 venv/
 
 # Editors and IDE
@@ -11,4 +12,7 @@ venv/
 
 # Mac-Stuff
 .DS_Store
+cloud_storage_key.json
 
+# Own directories
+emails/
