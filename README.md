@@ -69,6 +69,10 @@ The input variables, with their default values (some auto generated) are:
 
 After using this generator, your new project (the directory created) will contain an extensive `README.md` with instructions for development, deployment, etc. You can pre-read [the project `README.md` template here too](./{{cookiecutter.project_slug}}/README.md).
 
+### :warning: :warning: :warning: IMPORTANT NOTE
+
+Make sure to add `.env` to your `.gitignore`.
+
 ## Won't Do
 
 This project does not intend to support any other ORM apart from SQLAlchemy unless it works as smoothly with pydantic as SQLAlchemy does.
