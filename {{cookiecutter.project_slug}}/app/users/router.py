@@ -55,7 +55,7 @@ def docs_authentication(
 
 @auth_router.post('/token', response_model=schemas.Token)
 def login(
-    user_data: schemas.Login = Depends(),
+    user_data: schemas.Login,
     db: Session = Depends(deps.get_db)
 ):
     user = cruds.authenticate_user(
