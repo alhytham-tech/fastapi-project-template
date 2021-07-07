@@ -1,5 +1,7 @@
-from sqlalchemy.orm import Session
+from getpass import getpass
 from pydantic import EmailStr
+from sqlalchemy.orm import Session
+from email_validator import validate_email, EmailNotValidError
 
 from users import models as users_models
 from access_control import models as ac_models
@@ -8,11 +10,28 @@ from utils.users import get_password_hash
 
 
 
-def init_db(db: Session, email: EmailStr, password: str):
+def init_db(db: Session):
+    while True:
+        email = input('Enter superadmin email: ')
+        if len(email) > 0:
+            try:
+                validate_email(email)
+            except EmailNotValidError:
+                print('Email is not valid! Please provide a valid email.\n')
+            else:
+                break
+    while True:
+        password: str = getpass('Enter superadmin password (it won\'t be visible as you type):\n')
+        if len(password) < 8:
+            print('Invalid input! Password length must be 8 characters or more.\n')
+        else:
+            break
+    firstname = input('Enter superadmin firstname [Super]: ')
+    lastname = input('Enter superadmin lastname [Admin]: ')
     user_dict = {
         'email': email,
-        'firstname': 'Super',
-        'lastname': 'Admin',
+        'firstname': firstname if len(firstname) > 0 else 'Super',
+        'lastname': firstname if len(lastname) > 0 else 'Admin',
         'password_hash': get_password_hash(password)
     }
     perms = ['can_create_permission', 'can_view_permission', 'can_modify_permission', 'can_delete_permission']

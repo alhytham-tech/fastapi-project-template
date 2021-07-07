@@ -2,8 +2,6 @@
   "project_name": "Base Project",
   "project_slug": "{{ cookiecutter.project_name|lower|replace(' ', '-') }}",
   "secret_key": "change_this",
-  "superuser_email": "admin@example.com",
-  "superuser_password": "superadminpassword",
   "db_host": "localhost",
   "db_port": 5432,
   "db_name": "test_db",
