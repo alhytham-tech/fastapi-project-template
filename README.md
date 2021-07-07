@@ -36,7 +36,7 @@ cookiecutter https://github.com/Bexils/fastapi-project-template
 
 ### Generate passwords
 
-You will be asked to provide secret key whic will be used for password hashing. Open another terminal and run:
+You will be asked to provide secret key which will be used for password hashing. Open another terminal and run:
 
 ```bash
 openssl rand -hex 32
@@ -55,9 +55,7 @@ The input variables, with their default values (some auto generated) are:
 
 * `project_name`: The name of the project
 * `project_slug`: The development friendly name of the project. By default, based on the project name
-* `secret_key`: Backend server secret key. Use the method above to generate it.
-* `superuser_email`: The first superuser generated, with it you will be able to create more users, etc. By default, based on the domain.
-* `superuser_password`: First superuser password. Use the method above to generate it or set a frendlier one.
+* `secret_key`: Backend server secret key. Use the [method](#generate-passwords) above to generate it.
 * `db_host`: Database server url
 * `db_port`: Database server port
 * `db_name`: Name of database to use on the database server
@@ -68,10 +66,6 @@ The input variables, with their default values (some auto generated) are:
 ## More details
 
 After using this generator, your new project (the directory created) will contain an extensive `README.md` with instructions for development, deployment, etc. You can pre-read [the project `README.md` template here too](./{{cookiecutter.project_slug}}/README.md).
-
-### :warning: :warning: :warning: IMPORTANT NOTE
-
-Make sure to add `.env` to your `.gitignore`.
 
 ## Won't Do
 

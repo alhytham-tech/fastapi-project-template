@@ -4,6 +4,7 @@ __pycache__
 
 # Environments
 venv/
+{{ '.env' }}
 
 # Editors and IDE
 .idea
