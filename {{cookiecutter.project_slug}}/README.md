@@ -1,6 +1,6 @@
 # {{cookiecutter.project_name}}
 
-This is a backend server application power with Python and [FastAPI](https://fastapi.tiangolo.com).
+This is a backend server application powered with Python and [FastAPI](https://fastapi.tiangolo.com).
 
 ## Local Development
 
